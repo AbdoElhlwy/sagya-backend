@@ -203,7 +203,7 @@ router.post('/admin-login', [
   }
 
   const { phone, password } = req.body;
-  const user = db.prepare(`SELECT * FROM users WHERE phone = ? AND role IN ('admin', 'supervisor') AND is_active = 1`).get(phone.trim());
+  const user = db.prepare(`SELECT * FROM users WHERE phone = ? AND role IN ('admin', 'supervisor', 'super_admin') AND is_active = 1`).get(phone.trim());
 
   if (!user || !bcrypt.compareSync(password, user.password_hash)) {
     return res.status(401).json({ success: false, message: 'بيانات الدخول غير صحيحة' });
