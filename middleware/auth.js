@@ -44,6 +44,8 @@ function authenticate(req, res, next) {
 
 function authorize(...roles) {
   return (req, res, next) => {
+    // super_admin له كل الصلاحيات دائماً
+    if (req.user.role === 'super_admin') return next();
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({ success: false, message: 'غير مصرح لك بهذا الإجراء', code: 'FORBIDDEN' });
     }
