@@ -1,18 +1,19 @@
 /**
  * seed.js - بيانات أولية لقاعدة بيانات سقيا الحرمين
- * تشغيل: node seed.js
  */
 const bcrypt = require('bcryptjs');
 const { db, initializeDatabase } = require('./database/db');
 
 async function seed() {
-  // تهيئة قاعدة البيانات أولاً
-  initializeDatabase();
-  
-  console.log('🌱 بدء زرع البيانات الأولية...');
-
   try {
-    // ─── مدير النظام ────────────────────────────────────────
+    // تهيئة قاعدة البيانات أولاً وانتظار اكتمالها
+    initializeDatabase();
+    
+    // انتظر ثانية للتأكد من اكتمال التهيئة
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    console.log('🌱 بدء زرع البيانات الأولية...');
+
     const existingAdmin = db.prepare('SELECT id FROM users WHERE phone = ?').get('+966500000001');
     
     if (!existingAdmin) {
@@ -28,9 +29,7 @@ async function seed() {
       console.log('ℹ️  مدير النظام موجود مسبقاً');
     }
 
-    // ─── مشرف ────────────────────────────────────────────────
     const existingSupervisor = db.prepare('SELECT id FROM users WHERE phone = ?').get('+966500000002');
-    
     if (!existingSupervisor) {
       const hashedPassword = bcrypt.hashSync('Sagya@Sup2024!', 12);
       db.prepare(`
@@ -40,30 +39,13 @@ async function seed() {
       console.log('✅ تم إنشاء حساب المشرف');
     }
 
-    // ─── حملة نموذجية ────────────────────────────────────────
-    const existingCampaign = db.prepare('SELECT id FROM campaigns LIMIT 1').get();
-    
-    if (!existingCampaign) {
-      db.prepare(`
-        INSERT INTO campaigns (title, description, goal_amount, raised_amount, start_date, end_date, status, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
-      `).run(
-        'حملة سقيا رمضان 1446',
-        'توفير مياه الشرب الطازجة لضيوف الرحمن',
-        100000, 0,
-        '2025-03-01', '2025-03-31',
-        'active'
-      );
-      console.log('✅ تم إنشاء حملة نموذجية');
-    }
-
     console.log('\n✨ اكتملت عملية زرع البيانات!');
-    console.log('\n📌 بيانات الدخول:');
     console.log('   📱 الهاتف: +966500000001');
     console.log('   🔑 كلمة المرور: Sagya@2024!');
 
   } catch (err) {
     console.error('❌ خطأ في seed:', err.message);
+    // لا نوقف السيرفر بسبب خطأ في الـ seed
   }
 }
 
